@@ -18,6 +18,19 @@ struct TOKEN {
     char str;
 };
 
+void error_message(char *input, int pos, int mode)
+{
+    fprintf(stderr, "%s\n", input);
+    for (int i = 0; i < pos; i++) { fprintf(stderr, " "); }
+    fprintf(stderr, "^");
+    if (mode == 0) {
+        fprintf(stderr, "無効なトークンです\n");
+    } else if (mode == 1) {
+        fprintf(stderr, "数ではありません\n");
+    }
+    exit(1);
+}
+
 void add(TOKEN *token, TK type, int val, char str)
 {
     while (token->type != TK_EOF) {
@@ -38,17 +51,26 @@ void add(TOKEN *token, TK type, int val, char str)
 
 void tokenize(TOKEN *head, char *str)
 {
+    char *tmp = str;
+    bool symbol = false;
     while (*str != '\0') {
-        if (*str == ' ') {
+        if (isspace(*str)) {
             str++;
-        } if (*str == '+') {
+        } else if (*str == '+') {
+            if (symbol) { error_message(tmp, (size_t)str-(size_t)tmp, 1); }
             add(head, SYMBOL, -1, '+');
+            symbol = true;
             str++;
         } else if (*str == '-') {
+            if (symbol) { error_message(tmp, (size_t)str-(size_t)tmp, 1); }
             add(head, SYMBOL, -1, '-');
+            symbol = true;
             str++;
         } else if (isdigit(*str)) {
             add(head, DIGIT, strtol(str, &str, 10), '\0');
+            symbol = false;
+        } else {
+            error_message(tmp, (size_t)str-(size_t)tmp, 0);
         }
     }
 }
